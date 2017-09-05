@@ -1,4 +1,4 @@
-<div class="content-container" ng-controller="SavingAccountActionsController">
+<div class="content-container">
     <ul class="breadcrumb">
         <li><a href="#/viewsavingaccount/{{accountId}}">{{'label.anchor.viewsavingaccount' | translate}}</a></li>
         <li class="active">{{action}}</li>
@@ -167,11 +167,11 @@
             </div>
             <div class="col-md-offset-3" ng-show="showDelete">
                 <button type="reset" ng-click="submit()" has-permission='{{taskPermissionName}}' class="btn btn-default">{{ 'label.button.confirm' | translate }}</button>
-                <button type="submit" ng-click="cancel()" class="btn btn-primary">{{ 'label.button.cancel' | translate }}</button>
+                <a ng-click="cancel()" class="btn btn-primary">{{ 'label.button.cancel' | translate }}</a>
             </div>
 
             <div class="col-md-offset-3" ng-hide="showDelete">
-                <button id="cancel" ng-click="cancel()" class="btn btn-default">{{ 'label.button.cancel' | translate }}</button>
+                <a id="cancel" ng-click="cancel()" class="btn btn-default">{{ 'label.button.cancel' | translate }}</a>
                 <button id="save" type="submit" has-permission='{{taskPermissionName}}' class="btn btn-primary">{{ 'label.button.save' | translate }}</button>
             </div>
 

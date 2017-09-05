@@ -549,7 +549,8 @@
                 templateUrl: 'views/savings/edit_saving_account_application.html'
             })
             .when('/savingaccount/:id/:action', {
-                templateUrl: 'views/savings/saving_account_actions.html'
+                templateUrl: 'views/savings/saving_account_actions.html',
+                controller: 'SavingAccountActionsController'
             })
             .when('/savingaccountcharge/:id/:action/:chargeId', {
                 templateUrl: 'views/savings/saving_account_actions.html'

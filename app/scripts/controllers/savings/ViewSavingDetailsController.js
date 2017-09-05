@@ -69,7 +69,20 @@
                         location.path('/savingaccount/' + accountId + '/activate');
                         break;
                     case "deposit":
-                        location.path('/savingaccount/' + accountId + '/deposit');
+                        $uibModal.open({
+                            templateUrl: 'views/savings/saving_account_actions.html',
+                            controller: 'SavingAccountActionsDialogController',
+                            scope: scope,
+                            resolve: {
+                                accountData: function() {
+                                    return {
+                                        id: accountId,
+                                        action: 'deposit',
+                                        isModal: true
+                                    };
+                                }
+                            }
+                        });
                         break;
                     case "withdraw":
                         location.path('/savingaccount/' + accountId + '/withdrawal');
