@@ -2175,6 +2175,110 @@
     });
 }(mifosX.controllers || {}));;(function (module) {
     mifosX.controllers = _.extend(module, {
+        AdHocQueryListController: function (scope, resourceFactory, location) {
+            scope.adhocquerys = [];
+
+            scope.routeTo = function (id) {
+                location.path('/viewadhocquery/' + id);
+            };
+            
+            resourceFactory.adHocQueryResource.getAllAdHocQuery(function (data) {
+                scope.adhocquerys = data;
+                //console.log(data);
+            });
+        }
+    });
+    mifosX.ng.application.controller('AdHocQueryListController', ['$scope', 'ResourceFactory', '$location', mifosX.controllers.AdHocQueryListController]).run(function ($log) {
+        $log.info("AdHocQueryListController initialized");
+    });
+}(mifosX.controllers || {}));;(function (module) {
+    mifosX.controllers = _.extend(module, {
+    	CreateAdHocQueryController: function (scope, location, resourceFactory) {
+            scope.formData = {};
+            scope.submit = function () {
+                resourceFactory.adHocQueryResource.save(this.formData, function (data) {
+                	//alert(this.formData.isActive);
+                	//this.formData.isActive=this.formData.isActive ? 1 : 0;
+                    location.path("/viewadhocquery/" + data.resourceId);
+                });
+            };
+        }
+    });
+    mifosX.ng.application.controller('CreateAdHocQueryController', ['$scope', '$location', 'ResourceFactory', mifosX.controllers.CreateAdHocQueryController]).run(function ($log) {
+        $log.info("CreateAdHocQueryController initialized");
+    });
+}(mifosX.controllers || {}));
+
+
+;(function (module) {
+    mifosX.controllers = _.extend(module, {
+        EditAdHocQueryController: function (scope, routeParams, resourceFactory, location) {
+
+            scope.formData = {};
+            scope.adhocquery = [];
+          
+            resourceFactory.adHocQueryResource.get({adHocId: routeParams.id, template: 'true'}, function (data) {
+                scope.formData.name = data.name;
+                scope.formData.query = data.query;
+                scope.formData.tableFields = data.tableFields;
+                scope.formData.tableName = data.tableName;
+                scope.adHocId = data.id;
+                scope.formData.isActive=data.isActive;
+                scope.formData.email=data.email;
+            });
+           
+           scope.submit = function () {
+        	   
+        	   //this.formData.isActive=this.formData.isActive ? 1 : 0;
+        	  // alert(this.formData.email); 
+        	   resourceFactory.adHocQueryResource.update({'adHocId': scope.adHocId}, this.formData, function (data) {
+                    
+                	location.path('/viewadhocquery/' + data.resourceId);
+                });
+            };
+        }
+    });
+    mifosX.ng.application.controller('EditAdHocQueryController', ['$scope', '$routeParams', 'ResourceFactory', '$location', mifosX.controllers.EditAdHocQueryController]).run(function ($log) {
+        $log.info("EditAdHocQueryController initialized");
+    });
+}(mifosX.controllers || {}));
+;(function (module) {
+    mifosX.controllers = _.extend(module, {
+        ViewAdHocQueryController: function (scope, routeParams, route, location, resourceFactory, $modal) {
+            scope.adhocquery = [];
+            scope.formData = {};
+            resourceFactory.adHocQueryResource.get({'adHocId': routeParams.id}, function (data) {
+                scope.adhocquery = data;
+            });
+            
+            scope.deleteadhocquery = function () {
+                $modal.open({
+                    templateUrl: 'deleteadhocquery.html',
+                    controller: AdHocDeleteCtrl
+                });
+            };
+            var AdHocDeleteCtrl = function ($scope, $modalInstance) {
+                $scope.delete = function () {
+                    resourceFactory.adHocQueryResource.delete({adHocId: routeParams.id}, {}, function (data) {
+                        $modalInstance.close('delete');
+                        location.path('/adhocquery');
+                        // added dummy request param because Content-Type header gets removed
+                        // if the request does not contain any data (a request body)
+                    });
+                };
+                $scope.cancel = function () {
+                    $modalInstance.dismiss('cancel');
+                };
+            };
+
+        }
+    });
+    mifosX.ng.application.controller('ViewAdHocQueryController', ['$scope', '$routeParams', '$route', '$location', 'ResourceFactory', '$modal', mifosX.controllers.ViewAdHocQueryController]).run(function ($log) {
+        $log.info("ViewAdHocQueryController initialized");
+    });
+}(mifosX.controllers || {}));
+;(function (module) {
+    mifosX.controllers = _.extend(module, {
         CenterAttendanceController: function (scope, resourceFactory, routeParams, location, dateFilter) {
             scope.center = [];
             scope.tempData = {};
@@ -2718,6 +2822,66 @@
         $log.info("ViewCenterController initialized");
     });
 }(mifosX.controllers || {}));
+;/**
+ * Created by nikpa on 26-06-2017.
+ */
+
+(function (module) {
+    mifosX.controllers = _.extend(module, {
+        AddFamilyMembersController: function (scope, resourceFactory, routeParams,dateFilter, location) {
+
+            scope.formData={};
+            scope.date = {};
+            clientId=routeParams.clientId;
+            familyMemberId=routeParams.familyMemberId;
+
+            resourceFactory.familyMemberTemplate.get({clientId:clientId},function(data)
+            {
+                scope.relationshipIdOptions=data.relationshipIdOptions;
+                scope.genderIdOptions=data.genderIdOptions;
+                scope.maritalStatusIdOptions=data.maritalStatusIdOptions;
+                scope.professionIdOptions=data.professionIdOptions;
+
+            });
+
+
+
+
+
+            scope.routeTo=function()
+            {
+                location.path('/viewclient/'+clientId);
+            }
+
+            scope.addClientMember=function()
+            {
+
+
+                this.formData.locale = scope.optlang.code;
+                this.formData.dateFormat = scope.df;
+
+                if(scope.date.dateOfBirth){
+                    this.formData.dateOfBirth = dateFilter(scope.date.dateOfBirth,  scope.df);
+                }
+                resourceFactory.familyMembers.post({clientId:clientId},scope.formData,function(data)
+                {
+
+                    location.path('/viewclient/'+clientId);
+
+
+                })
+            }
+
+        }
+
+
+    });
+    mifosX.ng.application.controller('AddFamilyMembersController', ['$scope','ResourceFactory', '$routeParams','dateFilter', '$location', mifosX.controllers.AddFamilyMembersController]).run(function ($log) {
+        $log.info("AddFamilyMemberController initialized");
+    });
+
+}
+(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
         AddNewClientChargeController: function (scope, resourceFactory, location, routeParams, dateFilter) {
@@ -3262,6 +3426,9 @@
             entityname="ADDRESS";
             scope.addressArray=[];
             scope.formData.address=[];
+            //familymembers
+            scope.formData.familyMembers=[];
+            scope.familyArray=[];
             scope.datatables = [];
             scope.noOfTabs = 1;
             scope.step = '-';
@@ -3360,6 +3527,14 @@
 
                 }
 
+
+                scope.relationshipIdOptions=data.familyMemberOptions.relationshipIdOptions;
+                scope.genderIdOptions=data.familyMemberOptions.genderIdOptions;
+                scope.maritalStatusIdOptions=data.familyMemberOptions.maritalStatusIdOptions;
+                scope.professionIdOptions=data.familyMemberOptions.professionIdOptions;
+
+
+
             });
 
             scope.updateColumnHeaders = function(columnHeaderData) {
@@ -3389,7 +3564,23 @@
 
 
 
-// end of address
+            // end of address
+
+
+            // family members
+
+            scope.addFamilyMember=function()
+            {
+                scope.familyArray.push({});
+            }
+
+            scope.removeFamilyMember=function(index)
+            {
+                scope.familyArray.splice(index,1);
+            }
+
+
+            // end of family members
 
 
 
@@ -3592,6 +3783,69 @@
                 }
 
 
+                // family array
+
+                for(var i=0;i<scope.familyArray.length;i++)
+                {
+                    var temp=new Object();
+                    if(scope.familyArray[i].relationshipId)
+                    {
+                        temp.relationshipId=scope.familyArray[i].relationshipId;
+                    }
+                    if(scope.familyArray[i].firstName)
+                    {
+                        temp.firstName=scope.familyArray[i].firstName;
+                    }
+                    if(scope.familyArray[i].middleName)
+                    {
+                        temp.middleName=scope.familyArray[i].middleName;
+                    }
+                    if(scope.familyArray[i].lastName)
+                    {
+                        temp.lastName=scope.familyArray[i].lastName;
+                    }
+                    if(scope.familyArray[i].qualification)
+                    {
+                        temp.qualification=scope.familyArray[i].qualification;
+                    }
+                    if(scope.familyArray[i].mobileNumber)
+                    {
+                        temp.mobileNumber=scope.familyArray[i].mobileNumber;
+                    }
+                    if(scope.familyArray[i].age)
+                    {
+                        temp.age=scope.familyArray[i].age;
+                    }
+                    if(scope.familyArray[i].isDependent)
+                    {
+                        temp.isDependent=scope.familyArray[i].isDependent;
+                    }
+                    if(scope.familyArray[i].genderId)
+                    {
+                        temp.genderId=scope.familyArray[i].genderId;
+                    }
+                    if(scope.familyArray[i].professionId)
+                    {
+                        temp.professionId=scope.familyArray[i].professionId;
+                    }
+                    if(scope.familyArray[i].maritalStatusId)
+                    {
+                        temp.maritalStatusId=scope.familyArray[i].maritalStatusId;
+                    }
+                    if(scope.familyArray[i].dateOfBirth)
+                    {
+
+                        temp.dateOfBirth=dateFilter(scope.familyArray[i].dateOfBirth, scope.df);
+                    }
+
+                    temp.locale = scope.optlang.code;
+                    temp.dateFormat = scope.df;
+                    scope.formData.familyMembers.push(temp);
+                }
+
+                //
+
+
 
                 resourceFactory.clientResource.save(this.formData, function (data) {
                     location.path('/viewclient/' + data.clientId);
@@ -3713,9 +3967,6 @@
             scope.submit = function () {
                 this.formData.locale = scope.optlang.code;
                 this.formData.dateFormat = scope.df;
-                if (scope.opensavingsproduct == 'false') {
-                    this.formData.savingsProductId = null;
-                }
                 if (scope.choice === 1) {
                     if (scope.date.activationDate) {
                         this.formData.activationDate = dateFilter(scope.date.activationDate, scope.df);
@@ -3753,6 +4004,82 @@
         $log.info("EditClientController initialized");
     });
 }(mifosX.controllers || {}));
+;/**
+ * Created by nikpa on 22-06-2017.
+ */
+(function (module) {
+    mifosX.controllers = _.extend(module, {
+        EditFamilyMemberController: function (scope, resourceFactory, routeParams,dateFilter, location) {
+
+            scope.formData={};
+            scope.date = {};
+           clientId=routeParams.clientId;
+            familyMemberId=routeParams.familyMemberId;
+
+            resourceFactory.familyMemberTemplate.get({clientId:clientId},function(data)
+            {
+                scope.relationshipIdOptions=data.relationshipIdOptions;
+                scope.genderIdOptions=data.genderIdOptions;
+                scope.maritalStatusIdOptions=data.maritalStatusIdOptions;
+                scope.professionIdOptions=data.professionIdOptions;
+
+            });
+
+
+            resourceFactory.familyMember.get({clientId:clientId,clientFamilyMemberId:familyMemberId},function(data)
+            {
+                    scope.formData=data;
+
+                if (data.dateOfBirth) {
+                    var dobDate = dateFilter(data.dateOfBirth, scope.df);
+                    scope.date.dateOfBirth = new Date(dobDate);
+                }
+
+
+
+            });
+
+
+
+
+
+            scope.routeTo=function()
+            {
+                location.path('/viewclient/'+clientId);
+            }
+
+            scope.updateClientMember=function()
+            {
+               delete scope.formData.maritalStatus;
+               delete scope.formData.gender;
+               delete scope.formData.profession;
+               delete scope.formData.relationship;
+
+                this.formData.locale = scope.optlang.code;
+                this.formData.dateFormat = scope.df;
+
+                if(scope.date.dateOfBirth){
+                    this.formData.dateOfBirth = dateFilter(scope.date.dateOfBirth,  scope.df);
+                }
+                resourceFactory.familyMember.put({clientId:clientId,clientFamilyMemberId:familyMemberId},scope.formData,function(data)
+                {
+
+                    location.path('/viewclient/'+clientId);
+
+
+                })
+            }
+
+        }
+
+
+    });
+    mifosX.ng.application.controller('EditFamilyMemberController', ['$scope','ResourceFactory', '$routeParams','dateFilter', '$location', mifosX.controllers.EditFamilyMemberController]).run(function ($log) {
+        $log.info("EditFamilyMemberController initialized");
+    });
+
+}
+(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
         PayClientChargeController: function (scope, resourceFactory, location, routeParams, dateFilter) {
@@ -3961,6 +4288,7 @@
             scope.addresses=[];
             scope.view={};
             scope.view.data=[];
+           // scope.families=[];
             var entityname="ADDRESS";
             formdata={};
 
@@ -3996,6 +4324,15 @@
 
                 }
 
+
+               /* resourceFactory.getAllFamilyMembers.get({clientId:routeParams.id},function(data)
+                {
+
+                    scope.families=data;
+
+
+                })*/
+
             });
 
 
@@ -4026,6 +4363,49 @@
 
 
             // end of address
+
+
+            // family members
+
+            scope.families=[];
+
+
+
+
+            resourceFactory.familyMembers.get({clientId:routeParams.id},function(data)
+            {
+
+                scope.families=data;
+
+
+            });
+
+            scope.deleteFamilyMember=function(clientFamilyMemberId)
+            {
+
+                resourceFactory.familyMember.delete({clientId:routeParams.id,clientFamilyMemberId:clientFamilyMemberId},function(data)
+                {
+
+                    route.reload();
+                })
+
+            }
+
+            scope.editFamilyMember=function(clientFamilyMemberId)
+            {
+
+                location.path('/editfamilymember/'+routeParams.id+'/'+clientFamilyMemberId);
+
+
+            }
+
+            scope.routeToaddFamilyMember=function()
+            {
+                location.path('/addfamilymembers/'+ routeParams.id);
+            }
+
+
+            // end of family members
 
 
 
@@ -4061,7 +4441,6 @@
             scope.haveFile = [];
             resourceFactory.clientResource.get({clientId: routeParams.id}, function (data) {
                 scope.client = data;
-                console.log(data);
                 scope.isClosedClient = scope.client.status.value == 'Closed';
                 scope.staffData.staffId = data.staffId;
                 if (data.imagePresent) {
@@ -7206,7 +7585,7 @@
 }(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
-        ViewFixedDepositAccountDetailsController: function (scope, routeParams, resourceFactory, location, route, dateFilter,$uibModal) {
+        ViewFixedDepositAccountDetailsController: function (scope, routeParams, resourceFactory, paginatorService, location, route, dateFilter,$uibModal) {
             scope.isDebit = function (savingsTransactionType) {
                 return savingsTransactionType.withdrawal == true || savingsTransactionType.feeDeduction == true || savingsTransactionType.withholdTax == true;
             };
@@ -7310,6 +7689,7 @@
                 scope.convertDateArrayToObject('date');
                 scope.chartSlabs = scope.savingaccountdetails.accountChart.chartSlabs;
                 scope.status = data.status.value;
+                scope.heading = (!scope.savingaccountdetails.status.rejected && !scope.savingaccountdetails.status.submittedAndPendingApproval)?'label.heading.interestchart':'label.heading.summary';
                 if (scope.status == "Submitted and pending approval" || scope.status == "Active" || scope.status == "Approved") {
                     scope.choice = true;
                 }
@@ -7431,7 +7811,55 @@
 
                 }
 
+                resourceFactory.standingInstructionTemplateResource.get({fromClientId: scope.savingaccountdetails.clientId,fromAccountType: 2,fromAccountId: routeParams.id},function (response) {
+                    scope.standinginstruction = response;
+                    scope.searchTransaction();
+                });
             });
+
+            var fetchFunction = function (offset, limit, callback) {
+                var params = {};
+                params.offset = offset;
+                params.limit = limit;
+                params.locale = scope.optlang.code;
+                params.fromAccountId = routeParams.id;
+                params.fromAccountType = 2;
+                params.clientId = scope.savingaccountdetails.clientId;
+                params.clientName = scope.savingaccountdetails.clientName;
+                params.dateFormat = scope.df;
+
+                resourceFactory.standingInstructionResource.search(params, callback);
+            };
+
+            scope.searchTransaction = function () {
+                scope.displayResults = true;
+                scope.instructions = paginatorService.paginate(fetchFunction, 14);
+                scope.isCollapsed = false;
+            };
+
+            scope.deletestandinginstruction = function (id) {
+                $uibModal.open({
+                    templateUrl: 'delInstruction.html',
+                    controller: DelInstructionCtrl,
+                    resolve: {
+                        ids: function () {
+                            return id;
+                        }
+                    }
+                });
+            };
+
+            var DelInstructionCtrl = function ($scope, $uibModalInstance, ids) {
+                $scope.delete = function () {
+                    resourceFactory.standingInstructionResource.cancel({standingInstructionId: ids}, function (data) {
+                        scope.searchTransaction();
+                        $uibModalInstance.close('delete');
+                    });
+                };
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            };
 
             resourceFactory.DataTablesResource.getAllDataTables({apptable: 'm_savings_account'}, function (data) {
                 scope.savingdatatables = data;
@@ -7503,7 +7931,7 @@
             };
         }
     });
-    mifosX.ng.application.controller('ViewFixedDepositAccountDetailsController', ['$scope', '$routeParams', 'ResourceFactory', '$location', '$route', 'dateFilter','$uibModal', mifosX.controllers.ViewFixedDepositAccountDetailsController]).run(function ($log) {
+    mifosX.ng.application.controller('ViewFixedDepositAccountDetailsController', ['$scope', '$routeParams', 'ResourceFactory', 'PaginatorService', '$location', '$route', 'dateFilter','$uibModal', mifosX.controllers.ViewFixedDepositAccountDetailsController]).run(function ($log) {
         $log.info("ViewFixedDepositAccountDetailsController initialized");
     });
 }(mifosX.controllers || {}));
@@ -8760,7 +9188,7 @@
 }(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
-        ViewRecurringDepositAccountDetailsController: function (scope, routeParams, resourceFactory, location, route, dateFilter,$uibModal) {
+        ViewRecurringDepositAccountDetailsController: function (scope, routeParams, resourceFactory, paginatorService, location, route, dateFilter,$uibModal) {
             scope.isDebit = function (savingsTransactionType) {
                 return savingsTransactionType.withdrawal == true || savingsTransactionType.feeDeduction == true || savingsTransactionType.withholdTax == true;
             };
@@ -8862,6 +9290,7 @@
                 scope.chartSlabs = scope.savingaccountdetails.accountChart.chartSlabs;
                 scope.isprematureAllowed = data.maturityDate != null;
                 scope.status = data.status.value;
+                scope.heading = (!scope.savingaccountdetails.status.rejected && !scope.savingaccountdetails.status.submittedAndPendingApproval)?'label.heading.interestchart':'label.heading.summary';
                 if (scope.status == "Submitted and pending approval" || scope.status == "Active" || scope.status == "Approved") {
                     scope.choice = true;
                 }
@@ -9017,11 +9446,61 @@
                         }
                     }
                 }
+
+
                 /*var annualdueDate = [];
                  annualdueDate = data.annualFee.feeOnMonthDay;
                  annualdueDate.push(2013);
                  scope.annualdueDate = new Date(annualdueDate);*/
+                resourceFactory.standingInstructionTemplateResource.get({fromClientId: scope.savingaccountdetails.clientId,fromAccountType: 2,fromAccountId: routeParams.id},function (response) {
+                    scope.standinginstruction = response;
+                    scope.searchTransaction();
+                });
             });
+
+            var fetchFunction = function (offset, limit, callback) {
+                var params = {};
+                params.offset = offset;
+                params.limit = limit;
+                params.locale = scope.optlang.code;
+                params.fromAccountId = routeParams.id;
+                params.fromAccountType = 2;
+                params.clientId = scope.savingaccountdetails.clientId;
+                params.clientName = scope.savingaccountdetails.clientName;
+                params.dateFormat = scope.df;
+
+                resourceFactory.standingInstructionResource.search(params, callback);
+            };
+
+            scope.searchTransaction = function () {
+                scope.displayResults = true;
+                scope.instructions = paginatorService.paginate(fetchFunction, 14);
+                scope.isCollapsed = false;
+            };
+
+            scope.deletestandinginstruction = function (id) {
+                $uibModal.open({
+                    templateUrl: 'delInstruction.html',
+                    controller: DelInstructionCtrl,
+                    resolve: {
+                        ids: function () {
+                            return id;
+                        }
+                    }
+                });
+            };
+
+            var DelInstructionCtrl = function ($scope, $uibModalInstance, ids) {
+                $scope.delete = function () {
+                    resourceFactory.standingInstructionResource.cancel({standingInstructionId: ids}, function (data) {
+                        scope.searchTransaction();
+                        $uibModalInstance.close('delete');
+                    });
+                };
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            };
 
             resourceFactory.DataTablesResource.getAllDataTables({apptable: 'm_savings_account'}, function (data) {
                 scope.savingdatatables = data;
@@ -9116,7 +9595,7 @@
 
         }
     });
-    mifosX.ng.application.controller('ViewRecurringDepositAccountDetailsController', ['$scope', '$routeParams', 'ResourceFactory', '$location', '$route', 'dateFilter','$uibModal', mifosX.controllers.ViewRecurringDepositAccountDetailsController]).run(function ($log) {
+    mifosX.ng.application.controller('ViewRecurringDepositAccountDetailsController', ['$scope', '$routeParams', 'ResourceFactory', 'PaginatorService', '$location', '$route', 'dateFilter','$uibModal', mifosX.controllers.ViewRecurringDepositAccountDetailsController]).run(function ($log) {
         $log.info("ViewRecurringDepositAccountDetailsController initialized");
     });
 }(mifosX.controllers || {}));
@@ -11507,7 +11986,7 @@
                     scope.isTransaction = true;
                     scope.showAmountField = true;
                     scope.taskPermissionName = 'REPAYMENT_LOAN';
-                    scope.action = 'prepayloan';
+                    scope.action = 'repayment';
                     break;
                 case "waiveinterest":
                     scope.modelName = 'transactionDate';
@@ -12861,7 +13340,7 @@
 }(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
-        ViewLoanDetailsController: function (scope, routeParams, resourceFactory, location, route, http, $uibModal, dateFilter, API_VERSION, $sce, $rootScope) {
+        ViewLoanDetailsController: function (scope, routeParams, resourceFactory,paginatorService, location, route, http, $uibModal, dateFilter, API_VERSION, $sce, $rootScope) {
             scope.loandocuments = [];
             scope.report = false;
             scope.hidePentahoReport = true;
@@ -12874,8 +13353,7 @@
             scope.routeTo = function (loanId, transactionId, transactionTypeId) {
                 if (transactionTypeId == 2 || transactionTypeId == 4 || transactionTypeId == 1) {
                     location.path('/viewloantrxn/' + loanId + '/trxnId/' + transactionId);
-                }
-                ;
+                };
             };
 
             /***
@@ -13263,11 +13741,62 @@
                     ]
                     };
                 }
+
+                resourceFactory.standingInstructionTemplateResource.get({fromClientId: scope.loandetails.clientId,fromAccountType: 1,fromAccountId: routeParams.id},function (response) {
+                    scope.standinginstruction = response;
+                    scope.searchTransaction();
+                });
             });
+
+            var fetchFunction = function (offset, limit, callback) {
+                var params = {};
+                params.offset = offset;
+                params.limit = limit;
+                params.locale = scope.optlang.code;
+                params.fromAccountId = routeParams.id;
+                params.fromAccountType = 1;
+                params.clientId = scope.loandetails.clientId;
+                params.clientName = scope.loandetails.clientName;
+                params.dateFormat = scope.df;
+
+                resourceFactory.standingInstructionResource.search(params, callback);
+            };
+
+            scope.searchTransaction = function () {
+                scope.displayResults = true;
+                scope.instructions = paginatorService.paginate(fetchFunction, 14);
+                scope.isCollapsed = false;
+            };
+
+            scope.deletestandinginstruction = function (id) {
+                $uibModal.open({
+                    templateUrl: 'delInstruction.html',
+                    controller: DelInstructionCtrl,
+                    resolve: {
+                        ids: function () {
+                            return id;
+                        }
+                    }
+                });
+            };
+
+            var DelInstructionCtrl = function ($scope, $uibModalInstance, ids) {
+                $scope.delete = function () {
+                    resourceFactory.standingInstructionResource.cancel({standingInstructionId: ids}, function (data) {
+                        scope.searchTransaction();
+                        $uibModalInstance.close('delete');
+                    });
+                };
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            };
 
             resourceFactory.loanResource.getAllNotes({loanId: routeParams.id,resourceType:'notes'}, function (data) {
                 scope.loanNotes = data;
             });
+
+
 
             scope.saveNote = function () {
                 resourceFactory.loanResource.save({loanId: routeParams.id, resourceType: 'notes'}, this.formData, function (data) {
@@ -13517,7 +14046,7 @@
             };
         }
     });
-    mifosX.ng.application.controller('ViewLoanDetailsController', ['$scope', '$routeParams', 'ResourceFactory', '$location', '$route', '$http', '$uibModal', 'dateFilter', 'API_VERSION', '$sce', '$rootScope', mifosX.controllers.ViewLoanDetailsController]).run(function ($log) {
+    mifosX.ng.application.controller('ViewLoanDetailsController', ['$scope', '$routeParams', 'ResourceFactory','PaginatorService', '$location', '$route', '$http', '$uibModal', 'dateFilter', 'API_VERSION', '$sce', '$rootScope', mifosX.controllers.ViewLoanDetailsController]).run(function ($log) {
         $log.info("ViewLoanDetailsController initialized");
     });
 }(mifosX.controllers || {}));
@@ -16094,6 +16623,7 @@
             scope.firstError = false
             scope.secondError = false
             scope.thirdError = false
+            scope.specificRescheduleType = 2;
 
             scope.deepCopy = function (obj) {
                 if (Object.prototype.toString.call(obj) === '[object Array]') {
@@ -16113,8 +16643,26 @@
                 return obj;
             }
 
+            scope.selectRescheduleType = function(data){
+                if(data && data.id == scope.specificRescheduleType){
+                    scope.date.third = new Date();
+                }else{
+                     scope.date.third = undefined;
+                }
+            };
+
             resourceFactory.officeResource.getAllOffices(function (data) {
                 scope.offices = scope.deepCopy(data);
+                 resourceFactory.holidayTemplateResource.get(function(repaymentSchedulingRulesData){
+                    scope.repaymentSchedulingRules = repaymentSchedulingRulesData; 
+                    for(var i in scope.repaymentSchedulingRules){
+                        if(scope.repaymentSchedulingRules[i].id ==2){
+                            scope.reschedulingType = scope.repaymentSchedulingRules[i]; 
+                            scope.date.third = new Date();
+                        }
+                    }
+                                 
+                });
                 for (var i in data) {
                     data[i].children = [];
                     idToNodeMap[data[i].id] = data[i];
@@ -16184,7 +16732,7 @@
                 var testDate = new Date();
                 testDate.setDate(testDate.getDate() - 1);
 
-                if(scope.date.first < testDate || scope.date.second < testDate || scope.date.third < testDate ){
+                if(scope.date.first < testDate || scope.date.second < testDate || (scope.reschedulingType.id == scope.specificRescheduleType && scope.date.third < testDate) ){
                     if(scope.date.first < testDate) {
                         scope.firstError = true;
                     } else {
@@ -16207,14 +16755,18 @@
                     scope.thirdError = false;
                     var reqFirstDate = dateFilter(scope.date.first, scope.df);
                     var reqSecondDate = dateFilter(scope.date.second, scope.df);
-                    var reqThirdDate = dateFilter(scope.date.third, scope.df);
+                    var reqThirdDate = undefined;
                     var newholiday = new Object();
                     newholiday.locale = scope.optlang.code;
                     newholiday.dateFormat = scope.df;
                     newholiday.name = this.formData.name;
                     newholiday.fromDate = reqFirstDate;
-                    newholiday.toDate = reqSecondDate;
-                    newholiday.repaymentsRescheduledTo = reqThirdDate;
+                    newholiday.toDate = reqSecondDate;                    
+                    newholiday.reschedulingType = scope.reschedulingType.id;
+                    if(scope.reschedulingType.id == scope.specificRescheduleType){
+                        reqThirdDate = dateFilter(scope.date.third, scope.df);
+                        newholiday.repaymentsRescheduledTo = reqThirdDate;
+                    }
                     newholiday.description = this.formData.description;
                     newholiday.offices = [];
                     for (var i in holidayOfficeIdArray) {
@@ -16573,13 +17125,24 @@
             scope.formData = {};
             scope.date = {};
             scope.restrictDate = new Date();
+            scope.specificRescheduleType = 2;
 
             resourceFactory.holValueResource.getholvalues({holId: routeParams.id}, function (data) {
                 scope.holiday = data;
+                 resourceFactory.holidayTemplateResource.get(function(repaymentSchedulingRulesData){
+                    scope.repaymentSchedulingRules = repaymentSchedulingRulesData;
+                    for(var i in scope.repaymentSchedulingRules){
+                        if(scope.repaymentSchedulingRules[i].id == data.reschedulingType){
+                            scope.reschedulingType = scope.repaymentSchedulingRules[i]; 
+                        }
+                    }
+                    
+                });
                 scope.formData = {
                     name: data.name,
                     description: data.description,
                 };
+                scope.formData.reschedulingType = data.reschedulingType;
 
                 scope.holidayStatusActive = false;
                 if (data.status.value === "Active") {
@@ -16592,10 +17155,20 @@
                 var toDate = dateFilter(data.toDate, scope.df);
                 scope.date.toDate = new Date(toDate);
 
-                var repaymentsRescheduledTo = dateFilter(data.repaymentsRescheduledTo, scope.df);
-                scope.date.repaymentsRescheduledTo = new Date(repaymentsRescheduledTo);
+                if(data.reschedulingType == scope.specificRescheduleType){
+                    var repaymentsRescheduledTo = dateFilter(data.repaymentsRescheduledTo, scope.df);
+                    scope.date.repaymentsRescheduledTo = new Date(repaymentsRescheduledTo);
+                }  
 
             });
+
+            scope.selectRescheduleType = function(data){
+                if(data && data.id == scope.specificRescheduleType){
+                    scope.date.repaymentsRescheduledTo = new Date();
+                }else{
+                    scope.date.repaymentsRescheduledTo = undefined;
+                }
+            };
 
             scope.submit = function () {
                 this.formData.locale = scope.optlang.code;
@@ -16604,7 +17177,13 @@
                     this.formData.fromDate = dateFilter(scope.date.fromDate, scope.df);
                     this.formData.toDate = dateFilter(scope.date.toDate, scope.df);
                 }
-                this.formData.repaymentsRescheduledTo = dateFilter(scope.date.repaymentsRescheduledTo, scope.df);
+
+                if(scope.reschedulingType.id == scope.specificRescheduleType){
+                    this.formData.repaymentsRescheduledTo = dateFilter(scope.date.repaymentsRescheduledTo, scope.df);
+                }
+                var rescheduleId = scope.reschedulingType.id
+                this.formData.reschedulingType = rescheduleId;
+
                 resourceFactory.holValueResource.update({holId: routeParams.id}, this.formData, function (data) {
                     location.path('/viewholiday/' + routeParams.id);
                 });
@@ -26258,7 +26837,7 @@
 }(mifosX.controllers || {}));
 ;(function (module) {
     mifosX.controllers = _.extend(module, {
-        ViewSavingDetailsController: function (scope, routeParams, resourceFactory, location, $uibModal, route, dateFilter, $sce, $rootScope, API_VERSION) {
+        ViewSavingDetailsController: function (scope, routeParams, resourceFactory, paginatorService, location, $uibModal, route, dateFilter, $sce, $rootScope, API_VERSION) {
             scope.report = false;
             scope.hidePentahoReport = true;
             scope.showActiveCharges = true;
@@ -26385,9 +26964,9 @@
                 }
             };
 
+
             resourceFactory.savingsResource.get({accountId: routeParams.id, associations: 'all'}, function (data) {
                 scope.savingaccountdetails = data;
-                console.log(data);
                 scope.savingaccountdetails.availableBalance = scope.savingaccountdetails.enforceMinRequiredBalance?(scope.savingaccountdetails.summary.accountBalance - scope.savingaccountdetails.minRequiredOpeningBalance):scope.savingaccountdetails.summary.accountBalance;
                 scope.convertDateArrayToObject('date');
                 if(scope.savingaccountdetails.groupId) {
@@ -26546,7 +27125,32 @@
                     annualdueDate.push(new Date().getFullYear());
                     scope.annualdueDate = new Date(annualdueDate);
                 };
+
+                resourceFactory.standingInstructionTemplateResource.get({fromClientId: scope.savingaccountdetails.clientId,fromAccountType: 2,fromAccountId: routeParams.id},function (response) {
+                    scope.standinginstruction = response;
+                    scope.searchTransaction();
+                });
             });
+
+            var fetchFunction = function (offset, limit, callback) {
+                var params = {};
+                params.offset = offset;
+                params.limit = limit;
+                params.locale = scope.optlang.code;
+                params.fromAccountId = routeParams.id;
+                params.fromAccountType = 2;
+                params.clientId = scope.savingaccountdetails.clientId;
+                params.clientName = scope.savingaccountdetails.clientName;
+                params.dateFormat = scope.df;
+
+                resourceFactory.standingInstructionResource.search(params, callback);
+            };
+
+            scope.searchTransaction = function () {
+                scope.displayResults = true;
+                scope.instructions = paginatorService.paginate(fetchFunction, 14);
+                scope.isCollapsed = false;
+            };
 
             resourceFactory.DataTablesResource.getAllDataTables({apptable: 'm_savings_account'}, function (data) {
                 scope.savingdatatables = data;
@@ -26676,6 +27280,31 @@
                 scope.viewReportDetails = $sce.trustAsResourceUrl(scope.baseURL);
 
             };
+
+            scope.deletestandinginstruction = function (id) {
+                $uibModal.open({
+                    templateUrl: 'delInstruction.html',
+                    controller: DelInstructionCtrl,
+                    resolve: {
+                        ids: function () {
+                            return id;
+                        }
+                    }
+                });
+            };
+
+            var DelInstructionCtrl = function ($scope, $uibModalInstance, ids) {
+                $scope.delete = function () {
+                    resourceFactory.standingInstructionResource.cancel({standingInstructionId: ids}, function (data) {
+                        scope.searchTransaction();
+                        $uibModalInstance.close('delete');
+                    });
+                };
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            };
+
             scope.printReport = function () {
                 window.print();
                 window.close();
@@ -26716,7 +27345,7 @@
             
         }
     });
-    mifosX.ng.application.controller('ViewSavingDetailsController', ['$scope', '$routeParams', 'ResourceFactory', '$location','$uibModal', '$route', 'dateFilter', '$sce', '$rootScope', 'API_VERSION', mifosX.controllers.ViewSavingDetailsController]).run(function ($log) {
+    mifosX.ng.application.controller('ViewSavingDetailsController', ['$scope', '$routeParams', 'ResourceFactory','PaginatorService' , '$location','$uibModal', '$route', 'dateFilter', '$sce', '$rootScope', 'API_VERSION', mifosX.controllers.ViewSavingDetailsController]).run(function ($log) {
         $log.info("ViewSavingDetailsController initialized");
     });
 }(mifosX.controllers || {}));
@@ -26767,6 +27396,103 @@
     });
 }(mifosX.controllers || {}));
 ;(function (module) {
+    mifosX.controllers = _.extend(module, {
+        CreateSelfServiceUserController: function (scope, resourceFactory, routeParams,$uibModal) {
+            // TODO: Add Account Is Active Logic through email validation
+            scope.accountActive = false;    
+            scope.available = [];
+            scope.selected = [];
+            scope.selectedRoles = [] ;
+            scope.availableRoles = [];
+            scope.formData = {
+                isSelfServiceUser: true,
+                sendPasswordToEmail: true,
+                roles: []
+            };
+            scope.clientId = routeParams.clientId;
+            resourceFactory.userTemplateResource.get(function (data) {
+                scope.availableRoles = data.availableRoles;
+            });
+            resourceFactory.clientResource.get({clientId: scope.clientId},function(data){
+                scope.formData.firstname = data.firstname;
+                scope.formData.lastname = data.lastname;
+                scope.formData.email = '';
+                scope.formData.officeId = data.officeId;
+                scope.formData.staffId = data.staffId;
+                scope.formData.clients = [scope.clientId];
+            });
+
+            scope.addRole = function () {
+                for (var i in this.available) {
+                    for (var j in scope.availableRoles) {
+                        if (scope.availableRoles[j].id == this.available[i]) {
+                            var temp = {};
+                            temp.id = this.available[i];
+                            temp.name = scope.availableRoles[j].name;
+                            scope.selectedRoles.push(temp);
+                            scope.availableRoles.splice(j, 1);
+                        }
+                    }
+                }
+                //We need to remove selected items outside of above loop. If we don't remove, we can see empty item appearing
+                //If we remove available items in above loop, all items will not be moved to selectedRoles
+                for (var i in this.available) {
+                    for (var j in scope.selectedRoles) {
+                        if (scope.selectedRoles[j].id == this.available[i]) {
+                            scope.available.splice(i, 1);
+                        }
+                    }
+                }
+            };
+            scope.removeRole = function () {
+                for (var i in this.selected) {
+                    for (var j in scope.selectedRoles) {
+                        if (scope.selectedRoles[j].id == this.selected[i]) {
+                            var temp = {};
+                            temp.id = this.selected[i];
+                            temp.name = scope.selectedRoles[j].name;
+                            scope.availableRoles.push(temp);
+                            scope.selectedRoles.splice(j, 1);
+                        }
+                    }
+                }
+                //We need to remove selected items outside of above loop. If we don't remove, we can see empty item appearing
+                //If we remove selected items in above loop, all items will not be moved to availableRoles
+                for (var i in this.selected) {
+                    for (var j in scope.availableRoles) {
+                        if (scope.availableRoles[j].id == this.selected[i]) {
+                            scope.selected.splice(i, 1);
+                        }
+                    }
+                }
+            };
+
+            scope.submit = function(){
+                for (var i in scope.selectedRoles) {
+                    scope.formData.roles.push(scope.selectedRoles[i].id) ;
+                }
+                resourceFactory.userListResource.save(this.formData, function (data) {
+                    scope.accountActive = true;
+                    $uibModal.open({
+                        templateUrl: 'selfserviceModal.html',
+                        controller: SuccessModalCtrl,
+                    });
+                });
+                
+            }
+
+            var SuccessModalCtrl = function ($scope, $uibModalInstance) {
+                $scope.cancel = function () {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            };
+
+        }
+    });
+    mifosX.ng.application.controller('CreateSelfServiceUserController', ['$scope', 'ResourceFactory', '$routeParams','$uibModal', mifosX.controllers.CreateSelfServiceUserController]).run(function ($log) {
+        $log.info("CreateSelfServiceUserController initialized");
+    });
+}(mifosX.controllers || {}));;(function (module) {
     mifosX.controllers = _.extend(module, {
         CreateShareAccountController: function (scope, resourceFactory, location, routeParams, dateFilter) {
             scope.products = [];
